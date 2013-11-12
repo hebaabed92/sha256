@@ -31,6 +31,8 @@ int main(int argc, char *argv[])
     } input;
     int msgSize = 0;
     int i = 0;
+    uint32_t a, b, c, d, e, f, g, h;
+    uint32_t T1, T2, K, W;
     
     if(argc > 1) {
         printf("Input from stdin, not command line (for security reasons?)\n");
@@ -59,7 +61,30 @@ int main(int argc, char *argv[])
     for(test = 0; test < (512/8); test ++)
         printf("%d\t", input.test[test]);
     printf("\nStored Message size: %d\n", input.info.length);*/
-
-
+    
+    //Initializing the values
+    a = input.mi[0];
+    b = input.mi[1];
+    c = input.mi[2];
+    d = input.mi[3];
+    e = input.mi[4];
+    f = input.mi[5];
+    g = input.mi[6];
+    h = input.mi[7];
+    
+    //SHA-256 compression function loop
+    for(i=0; i<64; i++)
+    {
+        T1 = h + SIG1(e) + Ch(e, f, g) + K + W;
+        T2 = SIG0(a) + Maj(a, b, c);
+        h = g;
+        g = f;
+        f = e;
+        e = d + T1;
+        d = c;
+        c = b;
+        b = a;
+        a = T1 + T2;
+    }
     return 0;
 }
