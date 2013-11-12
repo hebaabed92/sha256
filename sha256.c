@@ -29,7 +29,7 @@ int main(int argc, char *argv[])
     if(msgSize > ((512-64)/8)-1)
         msgSize = ((512-64)/8-1);
     input.all[msgSize] = 1 << 7; // I think this is ok for just making the left-most bit a 1? 
-    for(; msgSize < 512/8; msgSize ++)
+    for(msgSize += 1; msgSize < 512/8; msgSize ++)
         input.all[msgSize] = 0 << 7;
     int test = 0;
     printf("Output now:\n");
