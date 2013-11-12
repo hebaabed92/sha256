@@ -12,8 +12,8 @@ int main(int argc, char *argv[])
         return 1;
     }
     if(fgets(input, 257, stdin) != NULL)
-        printf("Input recieved: %s", input);    
+        printf("Input recieved: %s\n", input);    
     else
-        printf("Error.");
+        printf("Error reading stdin - fgets returned NULL.\n");
     return 0;
 }
