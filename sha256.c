@@ -6,7 +6,13 @@
 #include <string.h>
 int main(int argc, char *argv[])
 {
-    char input[512/8];
+    union {
+        char input[512/8];
+        struct {
+            char message[(512-64)/8];
+            uint64_t length;
+        };
+    };
     int msgSize = 0;
     if(argc > 1) {
         printf("Input from stdin, not command line (for security reasons?)\n");
@@ -19,6 +25,7 @@ int main(int argc, char *argv[])
     
     msgSize = strlen(input);
     
+        
     
     return 0;
 }
