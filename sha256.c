@@ -6,12 +6,12 @@
 
 int main(int argc, char *argv[])
 {
-    char input[256];
+    char input[257];
     if(argc > 1) {
         printf("Input from stdin, not command line (for security reasons?)\n");
         return 1;
     }
-    if(read(stdin, input, 256) > 0)
+    if(fgets(input, 257, stdin) != NULL)
         printf("Input recieved: %s", input);    
     else
         printf("Error.");
