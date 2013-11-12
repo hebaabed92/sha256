@@ -12,6 +12,7 @@ int main(int argc, char *argv[])
             char message[(512-64)/8];
             uint64_t length;
         } info;
+        uint8_t test[512/8];
     } input;
     int msgSize = 0;
     
@@ -30,7 +31,9 @@ int main(int argc, char *argv[])
     input.all[msgSize] = 1 << 7; // I think this is ok for just making the left-most bit a 1? 
     for(; msgSize < 512/8; msgSize ++)
         input.all[msgSize] = 0 << 7;
-    
-    printf("Message now: %s\n", input.all);
+    int test = 0;
+    printf("Output now:\n");
+    for(test = 0; test < (512/8)-1; test ++)
+        printf("\t%d", input.test[test]);
     return 0;
 }
