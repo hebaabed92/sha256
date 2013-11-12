@@ -6,14 +6,18 @@
 
 int main(int argc, char *argv[])
 {
-    char input[257];
+    char input[513];
     if(argc > 1) {
         printf("Input from stdin, not command line (for security reasons?)\n");
         return 1;
     }
-    if(fgets(input, 257, stdin) == NULL) {
+    if(fgets(input, 513, stdin) == NULL) {
         printf("Error reading stdin - fgets returned NULL. Returning.\n");
         return 2;
-    }    
+    }
+
+    
+
+    
     return 0;
 }
