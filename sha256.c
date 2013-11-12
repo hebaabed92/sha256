@@ -4,6 +4,19 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
+
+//Macro definitions of functions we'll need for hashing
+#define Ch(x, y, z) ((x&y)^((~x)&z))
+#define Maj(x, y, z) ((x&y)^(x&z)^(y&z))
+#define rotR(x, n) ((x>>n)|(x<<(32-n)))
+#define shiftR(x, n) (x>>n)
+#define SIG0(x) (rotR(x, 2)^rotR(x, 13)^rotR(x, 22))
+#define SIG1(x) (rotR(x, 6)^rotR(x, 11)^rotR(x, 25))
+#define sig0(x) (rotR(x, 7)^rotR(x, 18)^shiftR(x, 3))
+#define sig1(x) (rotR(x, 17)^rotR(x, 19)^shiftR(x, 10))
+
+
+//Main function :)
 int main(int argc, char *argv[])
 {
     union {
@@ -12,7 +25,9 @@ int main(int argc, char *argv[])
             char message[(512-64)/8];
             uint64_t length;
         } info;
+        uint32_t mi[512/32];
         //uint8_t test[512/8];
+        //int test[512] : 1;
     } input;
     int msgSize = 0;
     int i = 0;
@@ -26,6 +41,9 @@ int main(int argc, char *argv[])
         return 2;
     }
     
+    //Pre-processing - truncate the message (we are only using 1 block)
+    //Pad the message according to the SHA256 specification
+    //Print the size of the message in bits at the end of the block
     msgSize = strlen(input.all);
     if(msgSize > ((512-64)/8)-1)
         msgSize = ((512-64)/8-1);
@@ -35,6 +53,7 @@ int main(int argc, char *argv[])
     input.info.length = msgSize*8;
     
 
+    //Block for testing whether the pre-processing went correctly
     /*int test = 0;
     printf("Output now:%s\n", input.all);
     for(test = 0; test < (512/8); test ++)
