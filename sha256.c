@@ -39,8 +39,7 @@ int main(int argc, char *argv[])
     uint32_t T1, T2;
     uint32_t W[64];
     uint32_t K[64] = KVALS;
-    uint32_t Hb[8] = HVALS;
-    uint32_t Ha[8] = HVALS;
+    uint32_t H[8] = HVALS;
     
     if(argc > 1) {
         printf("Input from stdin, not command line (for security reasons?)\n");
@@ -71,14 +70,14 @@ int main(int argc, char *argv[])
     printf("\nStored Message size: %d\n", input.info.length);*/
     
     //Initializing the values ("registers")
-    a = Hb[0];
-    b = Hb[1];
-    c = Hb[2];
-    d = Hb[3];
-    e = Hb[4];
-    f = Hb[5];
-    g = Hb[6];
-    h = Hb[7];
+    a = H[0];
+    b = H[1];
+    c = H[2];
+    d = H[3];
+    e = H[4];
+    f = H[5];
+    g = H[6];
+    h = H[7];
    
     //Prepare the message schedule (W)
     for(i=0; i<16; i++)
@@ -100,7 +99,14 @@ int main(int argc, char *argv[])
         b = a;
         a = T1 + T2;
     }
-
-    
+	H[0] = a + H[0];
+	H[1] = b + H[1];
+	H[2] = c + H[2];
+	H[3] = d + H[3];
+	H[4] = e + H[4];
+	H[5] = f + H[5];
+	H[6] = g + H[6];
+	H[7] = h + H[7];
+ 
     return 0;
 }
