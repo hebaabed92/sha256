@@ -107,6 +107,10 @@ int main(int argc, char *argv[])
 	H[5] = f + H[5];
 	H[6] = g + H[6];
 	H[7] = h + H[7];
- 
+    
+    for(i=0; i<8; i++)
+        printf("%x ",H[i]);
+    printf("\n");
+
     return 0;
 }
