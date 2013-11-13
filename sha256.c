@@ -42,7 +42,8 @@ int main(int argc, char *argv[])
     int msgSize = 0;
     int i = 0;
     uint32_t a, b, c, d, e, f, g, h;
-    uint32_t T1, T2, K, W;
+    uint32_t T1, T2, K;
+    uint32_t W[64];
     
     if(argc > 1) {
         printf("Input from stdin, not command line (for security reasons?)\n");
@@ -82,6 +83,12 @@ int main(int argc, char *argv[])
     g = H06;
     h = H07;
     
+    //Prepare the message schedule (W)
+    for(i=0; i<16; i++)
+        W[i] = input.mi[i]; 
+    for(i=16; i<64; i++)
+        W[i] = sig1(W[i-2])+W[i-7]+sig0(W[i-15])+W[i-16];
+
     //SHA-256 compression function loop
     for(i=0; i<64; i++)
     {
