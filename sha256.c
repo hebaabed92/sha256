@@ -5,6 +5,16 @@
 #include <stdint.h>
 #include <string.h>
 
+//Macro definitions of initial hash values
+#define H00 0x6a09e667
+#define H01 0xbb67ae85
+#define H02 0x3c6ef372
+#define H03 0xa54ff53a
+#define H04 0x510e527f
+#define H05 0x9b05688c
+#define H06 0x1f83d9ab
+#define H07 0x5be0cd19
+
 //Macro definitions of functions we'll need for hashing
 #define Ch(x, y, z) ((x&y)^((~x)&z))
 #define Maj(x, y, z) ((x&y)^(x&z)^(y&z))
@@ -62,15 +72,15 @@ int main(int argc, char *argv[])
         printf("%d\t", input.test[test]);
     printf("\nStored Message size: %d\n", input.info.length);*/
     
-    //Initializing the values
-    a = input.mi[0];
-    b = input.mi[1];
-    c = input.mi[2];
-    d = input.mi[3];
-    e = input.mi[4];
-    f = input.mi[5];
-    g = input.mi[6];
-    h = input.mi[7];
+    //Initializing the values ("registers")
+    a = H00;
+    b = H01;
+    c = H02;
+    d = H03;
+    e = H04;
+    f = H05;
+    g = H06;
+    h = H07;
     
     //SHA-256 compression function loop
     for(i=0; i<64; i++)
