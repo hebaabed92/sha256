@@ -30,8 +30,6 @@ int main(int argc, char *argv[])
             uint64_t length;
         } info;
         uint32_t mi[512/32];
-        //uint8_t test[512/8];
-        //int test[512] : 1;
     } input;
     int msgSize = 0;
     int i = 0;
@@ -56,11 +54,20 @@ int main(int argc, char *argv[])
     msgSize = strlen(input.all);
     if(msgSize > ((512-64)/8)-1)
         msgSize = ((512-64)/8-1);
-    input.all[msgSize] = 1 << 7; // I think this is ok for just making the left-most bit a 1? 
-    for(i = msgSize + 1; i < 512/8; i ++)
-        input.all[i] = 0 << 7;
+    input.all[msgSize+1] = (1<<7); // I think this is ok for just making the left-most bit a 1? 
+    for(i = msgSize+2; i < 512/8; i++)
+        input.all[i] = (0<<7);
     input.info.length = msgSize*8;
-    
+    printf("Every character stored:\n");
+    for(i = 0; i < (512/8); i++)
+        printf("%c", input.all[i]);
+    printf("\n");
+    printf("Initial M Values:\n");
+    for(i = 0; i < 16; i++)
+        printf("%08x ", input.mi[i]);
+    printf("\n");
+ 
+
 
     //Block for testing whether the pre-processing went correctly
     /*int test = 0;
@@ -78,13 +85,12 @@ int main(int argc, char *argv[])
     f = H[5];
     g = H[6];
     h = H[7];
-   
-    //Prepare the message schedule (W)
+   //Prepare the message schedule (W)
     for(i=0; i<16; i++)
         W[i] = input.mi[i]; 
     for(i=16; i<64; i++)
         W[i] = sig1(W[i-2])+W[i-7]+sig0(W[i-15])+W[i-16];
-
+ 
     //SHA-256 compression function loop
     for(i=0; i<64; i++)
     {
