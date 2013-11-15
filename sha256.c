@@ -38,6 +38,49 @@
 #define sig0(x) (rotR(x, 7)^rotR(x, 18)^shiftR(x, 3))
 #define sig1(x) (rotR(x, 17)^rotR(x, 19)^shiftR(x, 10))
 
+//SHA256 Compression Function
+void sha256Compress(uint32_t W[64], uint32_t H[8], uint32_t K[64])
+{
+    uint32_t a, b, c, d, e, f, g, h;
+
+    //Initializing the values ("registers" - maybe, who knows), and the message Schedule (W)
+    a = H[0];
+    b = H[1];
+    c = H[2];
+    d = H[3];
+    e = H[4];
+    f = H[5];
+    g = H[6];
+    h = H[7];
+    for(i=16; i<64; i++)
+        W[i] = sig1(W[i-2])+W[i-7]+sig0(W[i-15])+W[i-16];
+    
+    //SHA-256 compression function loop
+    for(i=0; i<64; i++)
+    {
+        T1 = h + SIG1(e) + Ch(e, f, g) + K[i] + W[i];
+        T2 = SIG0(a) + Maj(a, b, c);
+        h = g;
+        g = f;
+        f = e;
+        e = d + T1;
+        d = c;
+        c = b;
+        b = a;
+        a = T1 + T2;
+        //printf("\nt=%d\t%08x %08x %08x %08x %08x %08x %08x %08x", i, a, b, c, d, e, f, g, h);
+    }
+
+    //Update our hash values for this block
+    H[0] += a;
+	H[1] += b;
+	H[2] += c;
+	H[3] += d;
+	H[4] += e;
+	H[5] += f;
+	H[6] += g;
+	H[7] += h;
+}
 
 //Main function :)
 int main(int argc, char *argv[])
@@ -67,7 +110,7 @@ int main(int argc, char *argv[])
         printf("Input from stdin, not command line (for security reasons?)\n");
         return 1;
     }
-    
+    /*
     do {
         if(!zeroBlock)
             readBytes = fread(tempMsg, 1, MSGSIZE/8, stdin);
@@ -83,8 +126,9 @@ int main(int argc, char *argv[])
             if(readBytes > ((MSGSIZE-MSGSTOR)/8-1)) {
                 for(i = readBytes; i < MSGSIZE/8; i++)
                     tempMsg[i] = 0;
+                zeroBlock = TRUE;
             }
-            else if(
+            else
             
             msgLeft = FALSE;
         msgSize = strlen(input.all);
@@ -97,49 +141,23 @@ int main(int argc, char *argv[])
         for(i = 0; i < (MSGSIZE/32); i++)
             input.mi[i] = bswap_32(input.mi[i]);
    } while(msgLeft);
+   */
+
+    readBytes = fread(tempMsg, 1, MSGSIZE/8, stdin);
+    if(ferror(stdin)) {
+        printf("\n\n\tError reading from stdin, returning.\n");
+        return 1;
+    }
+    for(i = 0; i < (MSGSIZE/32); i++)
+        input.mi[i] = bswap_32(tempMsg[i]);
+        
+
+
 
     //Pre-processing - truncate the message (we are only using 1 block)
     //Pad the message according to the SHA256 specification
     //Print the size of the message in bits at the end of the block
-
-    //Initializing the values ("registers" - maybe, who knows), and the message Schedule (W)
-    a = H[0];
-    b = H[1];
-    c = H[2];
-    d = H[3];
-    e = H[4];
-    f = H[5];
-    g = H[6];
-    h = H[7];
-    for(i=0; i<16; i++)
-        W[i] = input.mi[i]; 
-    for(i=16; i<64; i++)
-        W[i] = sig1(W[i-2])+W[i-7]+sig0(W[i-15])+W[i-16];
-    
-    //SHA-256 compression function loop
-    for(i=0; i<64; i++)
-    {
-        T1 = h + SIG1(e) + Ch(e, f, g) + K[i] + W[i];
-        T2 = SIG0(a) + Maj(a, b, c);
-        h = g;
-        g = f;
-        f = e;
-        e = d + T1;
-        d = c;
-        c = b;
-        b = a;
-        a = T1 + T2;
-        //printf("\nt=%d\t%08x %08x %08x %08x %08x %08x %08x %08x", i, a, b, c, d, e, f, g, h);
-    }
-	H[0] = a + H[0];
-	H[1] = b + H[1];
-	H[2] = c + H[2];
-	H[3] = d + H[3];
-	H[4] = e + H[4];
-	H[5] = f + H[5];
-	H[6] = g + H[6];
-	H[7] = h + H[7];
-    
+   
     for(i=0; i<8; i++)
         printf("%x", H[i]);
     printf("\n");
