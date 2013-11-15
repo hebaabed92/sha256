@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
 
     printf("\n\n");
     for(i=0; i<8; i++)
-        printf("%x ", bswap_32(H[i]));
+        printf("%x ", H[i]);
     printf("\n");
 
     return 0;
