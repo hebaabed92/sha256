@@ -125,16 +125,20 @@ int main(int argc, char *argv[])
 
     //Reached the end of input - either we can fit the rest in one block or we can't
     else if(feof(stdin)) {
-        //Make sure the rest of the size is accounted for in the block
+        //Make sure the rest of the size is accounted for in the block, then zero out the rest of the block, move in 1
         msgSize += strlen(input.all)*8;
         for(i = (msgSize%MSGSIZE)/8; i < MSGSIZE/8; i++)
             input.all[i] = 0;
         input.all[(msgSize%MSGSIZE)/8] = (1<<7);
+
+        //If we can fit the length in this block, do it, if not, that's ok, hash this block
         if((msgSize%MSGSIZE) < (MSGSIZE-STORSIZE-1))
             input.info.length = msgSize;
         for(i = 0; i < (MSGSIZE/32); i++)
             W[i] = bswap_32(input.all[i]);
         sha256Compress(W, H, K);
+
+        //If we couldn't fit the length in the previous block, create a new block with zeros padded and put length at end
         if((msgSize%MSGSIZE) >= (MSGSIZE-STORSIZE-1))
         {
             for(i = 0; i < (MSGSIZE/32); i++)
