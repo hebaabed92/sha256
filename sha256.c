@@ -109,51 +109,34 @@ int main(int argc, char *argv[])
         printf("Input from stdin, not command line (for security reasons?)\n");
         return 1;
     }
-    /*
-    do {
-        if(!zeroBlock)
-            readBytes = fread(tempMsg, 1, MSGSIZE/8, stdin);
-        else
-            for(i = 0; i < MSGSIZE/8; i++)
-                tempMsg[i] = 0;
-        if(ferror(stdin)) {
-            printf("\n\n\tError returned reading from stdin - returning.\n");
-            return 1;
-        }
-        if(feof(stdin)) {
-            //Pad Zeros
-            if(readBytes > ((MSGSIZE-MSGSTOR)/8-1)) {
-                for(i = readBytes; i < MSGSIZE/8; i++)
-                    tempMsg[i] = 0;
-                zeroBlock = true;
-            }
-            else
-            
-            msgLeft = false;
-        msgSize = strlen(input.all);
-        if(msgSize > ((MSGSIZE-STORSIZE)/8)-1)
-            msgSize = ((MSGSIZE-STORSIZE)/8-1);
-        for(i = msgSize; i < MSGSIZE/8; i++)
-            input.all[i] = (0<<7);
-        input.all[msgSize] = (1<<7);
-        input.info.length = bswap_64(msgSize*8);
-        for(i = 0; i < (MSGSIZE/32); i++)
-            input.mi[i] = bswap_32(input.mi[i]);
-   } while(msgLeft);
-   */
-    while(fread(tempMsg, 1, MSGSIZE/8, stdin) == MSGSIZE/8)
+    
+    //Input/hashing loop
+    while(fread(input.all, 1, MSGSIZE/8, stdin) == MSGSIZE/8)
     {
-        //if(ferror(stdin)) {
-        //    printf("\n\n\tError reading from stdin, returning.\n");
-        //    return 1;
-        //}
+        msgSize += MSGSIZE;
         for(i = 0; i < (MSGSIZE/32); i++)
-            input.mi[i] = bswap_32(tempMsg[i]);
-        for(i = 0; i < (MSGSIZE/32); i++)
-            W[i] = input.mi[i];
+            W[i] = bswap_32(input.mi[i]);
         sha256Compress(W, H, K);
     }
-    
+    if(ferror(stdin)) {
+        printf("\n\n\tError reading stdin. Returning.\n");
+        return 1;
+    }
+    else if(feof(stdin)) {
+        if((msgSize%512) < (MSGSIZE - STORSIZE)/8)
+        {
+            for(i = msgSize; i < MSGSIZE/8; i++)
+                input.all[i] = 0;
+            input.all[msgSize] = (1<<7);
+            input.info.length = bswap_64(msgSize*8);
+            for(i = 0; i < (MSGSIZE/32); i++)
+                W[i] = bswap_32(input.mi[i]);
+
+    }
+    else {
+        printf("\n\n\tUnknown error. Returning.\n");
+        return 2;
+    }
 
 
     //Pre-processing - truncate the message (we are only using 1 block)
