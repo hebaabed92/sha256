@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
+#include <byteswap.h>
 
 //Macro definitions of constants
 #define HVALS {0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19}
@@ -24,21 +25,24 @@
 int main(int argc, char *argv[])
 {
     union {
-        char all[512/8];
+        uint8_t all[512/8];
         struct {
             char message[(512-64)/8];
             uint64_t length;
         } info;
         uint32_t mi[512/32];
     } input;
-    int msgSize = 0;
+    uint64_t msgSize = 0;
     int i = 0;
     uint32_t a, b, c, d, e, f, g, h;
     uint32_t T1, T2;
     uint32_t W[64];
     uint32_t K[64] = KVALS;
     uint32_t H[8] = HVALS;
-    
+    uint32_t x = 1;
+    char *y = (char*)&x;
+    printf("LittleBig: %c\n\n", *y+48);
+   
     if(argc > 1) {
         printf("Input from stdin, not command line (for security reasons?)\n");
         return 1;
@@ -47,6 +51,16 @@ int main(int argc, char *argv[])
         printf("Error reading stdin - fgets returned NULL. Returning.\n");
         return 2;
     }
+    for(i = 0; i < 512/32; i++)
+        input.mi[i] = input.mi[i];
+    printf("Every character stored:\n");
+    for(i = 0; i < (512/8); i++)
+        printf("%c", input.all[i]);
+    printf("\n");
+    printf("Initial M Values:\n");
+    for(i = 0; i < 16; i++)
+        printf("%08x ", input.mi[i]);
+    printf("\n\n");
     
     //Pre-processing - truncate the message (we are only using 1 block)
     //Pad the message according to the SHA256 specification
@@ -54,10 +68,21 @@ int main(int argc, char *argv[])
     msgSize = strlen(input.all);
     if(msgSize > ((512-64)/8)-1)
         msgSize = ((512-64)/8-1);
-    input.all[msgSize+1] = (1<<7); // I think this is ok for just making the left-most bit a 1? 
-    for(i = msgSize+2; i < 512/8; i++)
+    for(i = msgSize; i < 512/8; i++)
         input.all[i] = (0<<7);
-    input.info.length = msgSize*8;
+    input.all[msgSize] = (1<<7); // I think this is ok for just making the left-most bit a 1? 
+    input.info.length = bswap_64(msgSize*8);
+    for(i = 0; i < (512/32)-2; i++)
+        input.mi[i] = bswap_32(input.mi[i]);
+    /*printf("Every character stored:\n");
+    for(i = 0; i < (512/8); i++)
+        printf("%c", input.all[i]);
+    printf("\n");
+    printf("Initial M Values:\n");
+    for(i = 0; i < 16; i++)
+        printf("%08x ", input.mi[i]);
+    printf("\n\n");*/
+    
     printf("Every character stored:\n");
     for(i = 0; i < (512/8); i++)
         printf("%c", input.all[i]);
@@ -67,7 +92,6 @@ int main(int argc, char *argv[])
         printf("%08x ", input.mi[i]);
     printf("\n");
  
-
 
     //Block for testing whether the pre-processing went correctly
     /*int test = 0;
@@ -85,7 +109,7 @@ int main(int argc, char *argv[])
     f = H[5];
     g = H[6];
     h = H[7];
-   //Prepare the message schedule (W)
+    //Prepare the message schedule (W)
     for(i=0; i<16; i++)
         W[i] = input.mi[i]; 
     for(i=16; i<64; i++)
@@ -115,7 +139,7 @@ int main(int argc, char *argv[])
 	H[7] = h + H[7];
     
     for(i=0; i<8; i++)
-        printf("%x ",H[i]);
+        printf("%x ", bswap_32(H[i]));
     printf("\n");
 
     return 0;
