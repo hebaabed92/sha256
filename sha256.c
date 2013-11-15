@@ -64,22 +64,14 @@ int main(int argc, char *argv[])
     input.info.length = bswap_64(msgSize*8);
     for(i = 0; i < (512/32); i++)
         input.mi[i] = bswap_32(input.mi[i]);
-   
-    /*printf("Every character stored:\n");
-    for(i = 0; i < (512/8); i++)
-        printf("%c", input.all[i]);
-    printf("\n");
-    printf("Initial M Values:\n");
-    for(i = 0; i < 16; i++)
-        printf("%08x ", input.mi[i]);
-    printf("\n\n");*/
-    
+  
+    /*//Print Initial Message Block
     printf("Initial Message Block (W):\n");
     for(i = 0; i < 16; i++)
         printf("%08x ", input.mi[i]);
-    printf("\n");
+    printf("\n");*/
  
-    //Initializing the values ("registers" - maybe, who knows)
+    //Initializing the values ("registers" - maybe, who knows), and the message Schedule (W)
     a = H[0];
     b = H[1];
     c = H[2];
@@ -88,12 +80,11 @@ int main(int argc, char *argv[])
     f = H[5];
     g = H[6];
     h = H[7];
-    //Prepare the message schedule (W)
     for(i=0; i<16; i++)
         W[i] = input.mi[i]; 
     for(i=16; i<64; i++)
         W[i] = sig1(W[i-2])+W[i-7]+sig0(W[i-15])+W[i-16];
- printf("\nt=%d\t%08x %08x %08x %08x %08x %08x %08x %08x", i, a, b, c, d, e, f, g, h);
+    
     //SHA-256 compression function loop
     for(i=0; i<64; i++)
     {
@@ -107,7 +98,7 @@ int main(int argc, char *argv[])
         c = b;
         b = a;
         a = T1 + T2;
-        printf("\nt=%d\t%08x %08x %08x %08x %08x %08x %08x %08x", i, a, b, c, d, e, f, g, h);
+        //printf("\nt=%d\t%08x %08x %08x %08x %08x %08x %08x %08x", i, a, b, c, d, e, f, g, h);
     }
 	H[0] = a + H[0];
 	H[1] = b + H[1];
