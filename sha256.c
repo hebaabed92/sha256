@@ -41,8 +41,8 @@
 //SHA256 Compression Function
 void sha256Compress(uint32_t W[64], uint32_t H[8], uint32_t K[64])
 {
-    uint32_t a, b, c, d, e, f, g, h;
-
+    uint32_t a, b, c, d, e, f, g, h, T1, T2;
+    int i = 0;
     //Initializing the values ("registers" - maybe, who knows), and the message Schedule (W)
     a = H[0];
     b = H[1];
@@ -88,7 +88,6 @@ int main(int argc, char *argv[])
     //Declarin variables so early
     //gave your grandma a necklace - pearly!
     int i = 0, readBytes = 0;
-    bool msgLeft = TRUE, zeroBlock = FALSE;
     union {
         uint8_t all[MSGSIZE/8];
         struct {
@@ -126,11 +125,11 @@ int main(int argc, char *argv[])
             if(readBytes > ((MSGSIZE-MSGSTOR)/8-1)) {
                 for(i = readBytes; i < MSGSIZE/8; i++)
                     tempMsg[i] = 0;
-                zeroBlock = TRUE;
+                zeroBlock = true;
             }
             else
             
-            msgLeft = FALSE;
+            msgLeft = false;
         msgSize = strlen(input.all);
         if(msgSize > ((MSGSIZE-STORSIZE)/8)-1)
             msgSize = ((MSGSIZE-STORSIZE)/8-1);
@@ -142,16 +141,19 @@ int main(int argc, char *argv[])
             input.mi[i] = bswap_32(input.mi[i]);
    } while(msgLeft);
    */
-
-    readBytes = fread(tempMsg, 1, MSGSIZE/8, stdin);
-    if(ferror(stdin)) {
-        printf("\n\n\tError reading from stdin, returning.\n");
-        return 1;
+    while(fread(tempMsg, 1, MSGSIZE/8, stdin) == MSGSIZE/8)
+    {
+        //if(ferror(stdin)) {
+        //    printf("\n\n\tError reading from stdin, returning.\n");
+        //    return 1;
+        //}
+        for(i = 0; i < (MSGSIZE/32); i++)
+            input.mi[i] = bswap_32(tempMsg[i]);
+        for(i = 0; i < (MSGSIZE/32); i++)
+            W[i] = input.mi[i];
+        sha256Compress(W, H, K);
     }
-    for(i = 0; i < (MSGSIZE/32); i++)
-        input.mi[i] = bswap_32(tempMsg[i]);
-        
-
+    
 
 
     //Pre-processing - truncate the message (we are only using 1 block)
