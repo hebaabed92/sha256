@@ -122,16 +122,28 @@ int main(int argc, char *argv[])
         printf("\n\n\tError reading stdin. Returning.\n");
         return 1;
     }
-    else if(feof(stdin)) {
-        if((msgSize%512) < (MSGSIZE - STORSIZE)/8)
-        {
-            for(i = msgSize; i < MSGSIZE/8; i++)
-                input.all[i] = 0;
-            input.all[msgSize] = (1<<7);
-            input.info.length = bswap_64(msgSize*8);
-            for(i = 0; i < (MSGSIZE/32); i++)
-                W[i] = bswap_32(input.mi[i]);
 
+    //Reached the end of input - either we can fit the rest in one block or we can't
+    else if(feof(stdin)) {
+        //Make sure the rest of the size is accounted for in the block
+        msgSize += strlen(input.all)*8;
+        for(i = (msgSize%MSGSIZE)/8; i < MSGSIZE/8; i++)
+            input.all[i] = 0;
+        input.all[(msgSize%MSGSIZE)/8] = (1<<7);
+        if((msgSize%MSGSIZE) < (MSGSIZE-STORSIZE-1))
+            input.info.length = msgSize;
+        for(i = 0; i < (MSGSIZE/32); i++)
+            W[i] = bswap_32(input.all[i]);
+        sha256Compress(W, H, K);
+        if((msgSize%MSGSIZE) >= (MSGSIZE-STORSIZE-1))
+        {
+            for(i = 0; i < (MSGSIZE/32); i++)
+                input.all[i] = 0;
+            input.info.length = msgSize;
+            for(i = 0; i < (MSGSIZE/32); i++)
+                W[i] = bswap_32(input.all[i]);
+            sha256Compress(W, H, K);
+        }
     }
     else {
         printf("\n\n\tUnknown error. Returning.\n");
