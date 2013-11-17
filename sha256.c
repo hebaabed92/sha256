@@ -7,7 +7,7 @@
 #include <byteswap.h>
 
 //Macro definitions of constants
-#define MSGSIZE 512
+#define BLOCKSIZE 512
 #define STORSIZE 64
 #define HVALS {0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,\
                0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19}
@@ -38,6 +38,12 @@
 #define sig0(x) (rotR(x, 7)^rotR(x, 18)^shiftR(x, 3))
 #define sig1(x) (rotR(x, 17)^rotR(x, 19)^shiftR(x, 10))
 
+//Input 512 characters function
+uint64_t get512Char(uint8_t input[BLOCKSIZE/8])
+{
+       
+}
+
 //SHA256 Compression Function
 void sha256Compress(uint32_t W[64], uint32_t H[8], uint32_t K[64])
 {
@@ -54,6 +60,10 @@ void sha256Compress(uint32_t W[64], uint32_t H[8], uint32_t K[64])
     h = H[7];
     for(i=16; i<64; i++)
         W[i] = sig1(W[i-2])+W[i-7]+sig0(W[i-15])+W[i-16];
+
+//    printf("\nInitial W Vals:\n");
+//    for(i=0; i<16; i++)
+//        printf("%08x ", W[i]);
     
     //SHA-256 compression function loop
     for(i=0; i<64; i++)
@@ -68,7 +78,7 @@ void sha256Compress(uint32_t W[64], uint32_t H[8], uint32_t K[64])
         c = b;
         b = a;
         a = T1 + T2;
-        //printf("\nt=%d\t%08x %08x %08x %08x %08x %08x %08x %08x", i, a, b, c, d, e, f, g, h);
+//        printf("\nt=%d\t%08x %08x %08x %08x %08x %08x %08x %08x", i, a, b, c, d, e, f, g, h);
     }
 
     //Update our hash values for this block
@@ -89,14 +99,14 @@ int main(int argc, char *argv[])
     //gave your grandma a necklace - pearly!
     int i = 0, readBytes = 0;
     union {
-        uint8_t all[MSGSIZE/8];
+        uint8_t all[BLOCKSIZE/8];
         struct {
-            char message[(MSGSIZE-STORSIZE)/8];
+            char message[(BLOCKSIZE-STORSIZE)/8];
             uint64_t length;
         } info;
-        uint32_t mi[MSGSIZE/32];
+        uint32_t mi[BLOCKSIZE/32];
     } input;
-    uint8_t tempMsg[MSGSIZE/8];
+    uint8_t tempMsg[BLOCKSIZE/8];
     uint64_t msgSize = 0;
     uint32_t a, b, c, d, e, f, g, h;
     uint32_t T1, T2;
@@ -111,12 +121,15 @@ int main(int argc, char *argv[])
     }
     
     //Input/hashing loop
-    while(fread(input.all, 1, MSGSIZE/8, stdin) == MSGSIZE/8)
+    fgets(input.all, BLOCKSIZE/8, stdin);
+
+    while(strlen(input.all) == BLOCKSIZE/8)
     {
-        msgSize += MSGSIZE;
-        for(i = 0; i < (MSGSIZE/32); i++)
+        msgSize += BLOCKSIZE;
+        for(i = 0; i < (BLOCKSIZE/32); i++)
             W[i] = bswap_32(input.mi[i]);
         sha256Compress(W, H, K);
+        fgets(input.all, BLOCKSIZE/8, stdin);
     }
     if(ferror(stdin)) {
         printf("\n\n\tError reading stdin. Returning.\n");
@@ -127,25 +140,26 @@ int main(int argc, char *argv[])
     else if(feof(stdin)) {
         //Make sure the rest of the size is accounted for in the block, then zero out the rest of the block, move in 1
         msgSize += strlen(input.all)*8;
-        for(i = (msgSize%MSGSIZE)/8; i < MSGSIZE/8; i++)
+        printf("\n\n\tmsgSize: %d\t\n", msgSize);
+        for(i = (msgSize%BLOCKSIZE)/8; i < BLOCKSIZE/8; i++)
             input.all[i] = 0;
-        input.all[(msgSize%MSGSIZE)/8] = (1<<7);
+        input.all[(msgSize%BLOCKSIZE)/8] = (1<<7);
 
         //If we can fit the length in this block, do it, if not, that's ok, hash this block
-        if((msgSize%MSGSIZE) < (MSGSIZE-STORSIZE-1))
-            input.info.length = msgSize;
-        for(i = 0; i < (MSGSIZE/32); i++)
-            W[i] = bswap_32(input.all[i]);
+        if((msgSize%BLOCKSIZE) < (BLOCKSIZE-STORSIZE-1))
+            input.info.length = bswap_64(msgSize);
+        for(i = 0; i < (BLOCKSIZE/32); i++)
+            W[i] = bswap_32(input.mi[i]);
         sha256Compress(W, H, K);
 
         //If we couldn't fit the length in the previous block, create a new block with zeros padded and put length at end
-        if((msgSize%MSGSIZE) >= (MSGSIZE-STORSIZE-1))
+        if((msgSize%BLOCKSIZE) >= (BLOCKSIZE-STORSIZE-1))
         {
-            for(i = 0; i < (MSGSIZE/32); i++)
+            for(i = 0; i < (BLOCKSIZE/8); i++)
                 input.all[i] = 0;
-            input.info.length = msgSize;
-            for(i = 0; i < (MSGSIZE/32); i++)
-                W[i] = bswap_32(input.all[i]);
+            input.info.length = bswap_64(msgSize);
+            for(i = 0; i < (BLOCKSIZE/32); i++)
+                W[i] = bswap_32(input.mi[i]);
             sha256Compress(W, H, K);
         }
     }
