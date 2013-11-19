@@ -43,7 +43,7 @@ uint64_t get512Char(char input[BLOCKSIZE/8])
 {
     int i = 0;
     do {
-        i = strlen(fgets((char *)(input+i), (BLOCKSIZE/8 - i), stdin));
+        i += strlen(fgets((char *)(input+i), (BLOCKSIZE/8 - i), stdin));
         if(i == BLOCKSIZE || feof(stdin))
             return i;
         if(ferror(stdin))
@@ -145,7 +145,6 @@ int main(int argc, char *argv[])
     else if(feof(stdin)) {
         //Make sure the rest of the size is accounted for in the block, then zero out the rest of the block, move in 1
         msgSize += strlen(input.all)*8;
-        printf("\n\n\tmsgSize: %d\t\n", msgSize);
         for(i = (msgSize%BLOCKSIZE)/8; i < BLOCKSIZE/8; i++)
             input.all[i] = 0;
         input.all[(msgSize%BLOCKSIZE)/8] = (1<<7);
