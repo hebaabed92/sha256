@@ -69,10 +69,6 @@ void sha256Compress(uint32_t W[64], uint32_t H[8], uint32_t K[64])
     for(i=16; i<64; i++)
         W[i] = sig1(W[i-2])+W[i-7]+sig0(W[i-15])+W[i-16];
 
-//    printf("\nInitial W Vals:\n");
-//    for(i=0; i<16; i++)
-//        printf("%08x ", W[i]);
-    
     //SHA-256 compression function loop
     for(i=0; i<64; i++)
     {
@@ -86,7 +82,6 @@ void sha256Compress(uint32_t W[64], uint32_t H[8], uint32_t K[64])
         c = b;
         b = a;
         a = T1 + T2;
-//        printf("\nt=%d\t%08x %08x %08x %08x %08x %08x %08x %08x", i, a, b, c, d, e, f, g, h);
     }
 
     //Update our hash values for this block
@@ -98,6 +93,7 @@ void sha256Compress(uint32_t W[64], uint32_t H[8], uint32_t K[64])
 	H[5] += f;
 	H[6] += g;
 	H[7] += h;
+    return;
 }
 
 //Main function :)
