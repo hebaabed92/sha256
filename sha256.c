@@ -39,9 +39,17 @@
 #define sig1(x) (rotR(x, 17)^rotR(x, 19)^shiftR(x, 10))
 
 //Input 512 characters function
-uint64_t get512Char(uint8_t input[BLOCKSIZE/8])
+uint64_t get512Char(char input[BLOCKSIZE/8])
 {
-       
+    int i = 0;
+    do {
+        i = strlen(fgets((char *)(input+i), (BLOCKSIZE/8 - i), stdin));
+        if(i == BLOCKSIZE || feof(stdin))
+            return i;
+        if(ferror(stdin))
+            return -1;
+    } while(input[i-1] == '\n');
+    return -2;
 }
 
 //SHA256 Compression Function
@@ -121,15 +129,12 @@ int main(int argc, char *argv[])
     }
     
     //Input/hashing loop
-    fgets(input.all, BLOCKSIZE/8, stdin);
-
-    while(strlen(input.all) == BLOCKSIZE/8)
+    while(get512Char(input.all) == BLOCKSIZE)
     {
         msgSize += BLOCKSIZE;
         for(i = 0; i < (BLOCKSIZE/32); i++)
             W[i] = bswap_32(input.mi[i]);
         sha256Compress(W, H, K);
-        fgets(input.all, BLOCKSIZE/8, stdin);
     }
     if(ferror(stdin)) {
         printf("\n\n\tError reading stdin. Returning.\n");
@@ -152,7 +157,7 @@ int main(int argc, char *argv[])
             W[i] = bswap_32(input.mi[i]);
         sha256Compress(W, H, K);
 
-        //If we couldn't fit the length in the previous block, create a new block with zeros padded and put length at end
+        //If we couldn't fit the length in the previous block, create a new padded block and put length at end
         if((msgSize%BLOCKSIZE) >= (BLOCKSIZE-STORSIZE-1))
         {
             for(i = 0; i < (BLOCKSIZE/8); i++)
@@ -174,10 +179,10 @@ int main(int argc, char *argv[])
     //Print the size of the message in bits at the end of the block
    
     for(i=0; i<8; i++)
-        printf("%x", H[i]);
+        printf("%08x", H[i]);
     printf("\n");
     for(i=0; i<8; i++)
-        printf("%x ", H[i]);
+        printf("%08x ", H[i]);
     printf("\n");
 
     return 0;
